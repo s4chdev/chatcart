@@ -1,0 +1,11 @@
+services:
+  chatcart:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - PORT=3000
+    restart: unless-stopped
