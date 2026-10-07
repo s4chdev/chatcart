@@ -1,0 +1,27 @@
+{
+  "name": "chatcart",
+  "version": "0.1.0",
+  "description": "ChatCart: an AI shop agent for small Indian merchants that transacts with PayPal (Orders v2, Payments, Invoicing) inside a WhatsApp-style chat.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^18.0.6",
+    "express": "^4.22.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "supertest": "^7.3.1"
+  }
+}
