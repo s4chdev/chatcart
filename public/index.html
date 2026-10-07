@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marwar Crafts · ChatCart</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="chat-page">
+  <div class="page-wrap">
+    <!-- Phone-like chat column -->
+    <main class="phone">
+      <header class="chat-header">
+        <div class="avatar">🧵</div>
+        <div class="title-block">
+          <div class="shop-title">Marwar Crafts · Jodhpur</div>
+          <div class="shop-subtitle">ChatCart AI shop agent · usually replies instantly</div>
+        </div>
+        <div class="header-right">
+          <span id="modeBadge" class="mode-badge" title="Backend mode">…</span>
+          <a class="dash-link" href="/dashboard">Merchant dashboard →</a>
+        </div>
+      </header>
+
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+
+      <div id="chipRow" class="chip-row"></div>
+
+      <form id="chatForm" class="chat-input-bar" autocomplete="off">
+        <input id="chatInput" type="text" placeholder="Type a message" autocomplete="off" />
+        <button type="submit" class="send-btn" aria-label="Send">➤</button>
+      </form>
+    </main>
+
+    <!-- Side panel: visible only on wide screens -->
+    <aside class="side-panel">
+      <h2>What ChatCart does</h2>
+      <ul>
+        <li>Browse catalog</li>
+        <li>Build cart</li>
+        <li>PayPal checkout (Orders v2)</li>
+        <li>Capture payment</li>
+        <li>Order status</li>
+        <li>Refunds with merchant guardrails</li>
+        <li>PayPal invoices for bulk/custom orders</li>
+      </ul>
+      <p class="side-hint">Chat on the left like WhatsApp — the agent handles products, cart, PayPal, orders and refunds.</p>
+    </aside>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

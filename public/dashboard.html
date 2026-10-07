@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatCart · Merchant Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="dash-page">
+  <header class="dash-header">
+    <div>
+      <h1>ChatCart · Merchant Dashboard</h1>
+      <p class="dash-sub"><span id="dashMode" class="mode-badge">…</span></p>
+    </div>
+    <a class="back-link" href="/">← Back to chat</a>
+  </header>
+
+  <main class="dash-main">
+    <section class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value" id="statRevenue">—</div></div>
+      <div class="stat-card"><div class="stat-label">Orders</div><div class="stat-value" id="statOrders">—</div></div>
+      <div class="stat-card"><div class="stat-label">Refunded</div><div class="stat-value" id="statRefunded">—</div></div>
+      <div class="stat-card"><div class="stat-label">Pending approvals</div><div class="stat-value" id="statPending">—</div></div>
+    </section>
+
+    <p id="policyLine" class="policy-line"></p>
+
+    <section class="card">
+      <h2>Orders</h2>
+      <div class="table-wrap"><table class="tbl" id="ordersTable">
+        <thead><tr><th>ID</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="empty" id="ordersEmpty" hidden>No orders yet.</p>
+    </section>
+
+    <section class="card">
+      <h2>Refunds</h2>
+      <div class="table-wrap"><table class="tbl" id="refundsTable">
+        <thead><tr><th>ID</th><th>Order</th><th>Amount</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="empty" id="refundsEmpty" hidden>No refunds yet.</p>
+    </section>
+
+    <section class="card">
+      <h2>Invoices</h2>
+      <div class="table-wrap"><table class="tbl" id="invoicesTable">
+        <thead><tr><th>ID</th><th>Recipient</th><th>Total</th><th>Status</th><th>Link</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="empty" id="invoicesEmpty" hidden>No invoices yet.</p>
+    </section>
+
+    <section class="card">
+      <h2>Agent actions log</h2>
+      <div class="table-wrap"><table class="tbl" id="actionsTable">
+        <thead><tr><th>Time</th><th>Session</th><th>Tool</th><th>Args</th><th>OK</th><th>Summary</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="empty" id="actionsEmpty" hidden>No agent actions yet.</p>
+    </section>
+  </main>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>
