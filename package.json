@@ -10,6 +10,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "build:studio": "npm --prefix studio ci --no-audit --no-fund && npm --prefix studio run build",
+    "build": "npm run build:studio",
+    "dev:studio": "npm --prefix studio run dev",
     "test": "node --test",
     "lint": "eslint ."
   },
