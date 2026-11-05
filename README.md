@@ -105,14 +105,62 @@ docker compose up --build
 
 ### Tests & lint
 ```bash
-npm test     # node:test: intent parsing, full mock flow via HTTP, LLM tool loop, PayPal request shapes
+npm test     # node:test: intent parsing, full mock flow via HTTP, LLM tool loop, PayPal request shapes, AG Studio data + AI proxy
 npm run lint
 ```
-CI runs both plus a Docker build on every push (`.github/workflows/ci.yml`).
+CI runs both, typechecks and builds the AG Studio dashboard, plus a Docker build on every push (`.github/workflows/ci.yml`).
+
+## Merchant dashboard on AG Studio
+
+`/dashboard` is a merchant analytics dashboard built with **[AG Studio](https://www.ag-grid.com/studio/)** (AG Grid's embedded analytics, which uses AG Grid and AG Charts underneath). The original hand-built dashboard is still at `/dashboard/classic`.
+
+![ChatCart merchant dashboard on AG Studio](docs/chatcart-studio.png)
+
+**Sponsor tools used:** AG Studio 3.0 (`ag-studio`, `ag-studio-react`), AG Grid 36.2 (grid widgets), AG Charts (chart widgets), the **AG Studio Agent Framework** (AI harness, built-in agents, custom tools), plus PayPal Orders v2, Payments refunds and Invoicing v2 as the data behind it.
+
+What's in it:
+- **Report "Marwar Crafts, Jodhpur"** with three pages:
+  - *Overview*: KPI tiles (revenue captured, orders, refund rate, outstanding invoice $) with weekly sparklines, a date filter, revenue by category, revenue and refunds by product, refunds by week and outcome, invoices paid vs unpaid, and an orders grid.
+  - *Refunds & invoices*: refund rate by product, refund reasons, the refund request log, PayPal invoices.
+  - *Agent log*: what the agent did, by tool and actor, plus the full agent actions log grid.
+- **Two custom widgets** (in the widget menu under *ChatCart*), both reading through Studio's query engine so the date filter and cross filters apply:
+  - **Refund approval queue**: refunds the agent held back (over the auto-refund limit or outside the window), with **Approve / Reject** buttons that call `POST /api/merchant/refunds/:id/approve|reject`. Studio reloads its data afterwards, so the KPIs and charts update too.
+  - **Agent activity feed**: a WhatsApp-style timeline of every tool the agent (and the merchant) ran.
+- **Custom theme**: WhatsApp greens on a Jodhpur-sandstone canvas, saffron/bandhej/dabu-indigo chart palette and a leheriya stripe under the header. Every Studio, grid and chart colour points at one set of CSS tokens (`studio/src/styles.css`, `studio/src/studio/theme.ts`).
+- **Layout tools**: Edit mode (Compose / Data panels, drag-resize, add pages), undo/redo, *Save layout* (kept in the browser) and *Reset*.
+- **AI (Agent Framework)**: click **Edit** to open the AI Assistant. A custom primary agent, **ChatCart Ops**, starts from Studio's built-in Lead (its instructions and `delegate_to`), adds shop knowledge plus two custom tools (`get_shop_policy`, `get_refund_queue`), and hands dashboard work to Studio's built-in **Planning, Data, Page and Widget** agents. Try *"Show refund rate by product this week"* or *"Which refunds need me?"*. The custom widgets carry AI metadata so the agents can place them.
+- **Demo data**: in mock mode the shop is seeded with ~6 weeks of realistic demo orders, refunds and invoices (flagged `demo`, badge in the header, never sent to PayPal). `DEMO_SEED=0` starts empty, `DEMO_SEED=1` forces it on.
+
+How it's wired:
+- `studio/` is a small React + Vite + TypeScript app. It builds to `public/studio/`, which Express serves at `/dashboard` (behind the same `DASHBOARD_PASSWORD` basic auth). The Express app stays plain JS.
+- `GET /api/studio/data` (`src/studio-data.js`) turns the store into flat, related tables: `orders`, `orderItems` (product, category, refunds spread over lines by value), `products`, `refunds`, `invoices`, `agentActions`. `studio/src/studio/data.ts` declares the fields, relationships, a shared calendar and the `refundRate` / `productRefundRate` / `collectionRate` measures.
+- `POST /api/studio/ai/responses` (`src/studio-ai.js`) is a server-side proxy for Studio's OpenAI Responses adapter: it adds the key, allows only the configured models, caps output tokens and streams the SSE reply back. The key never reaches the browser; with no key the assistant is hidden.
+
+Environment:
+
+| Variable | Purpose |
+| --- | --- |
+| `AG_STUDIO` | AG Studio licence key (optional; trial watermark without it) |
+| `AG_STUDIO_OPENAI_API_KEY` | Key for the AI assistant (OpenAI Responses API). Falls back to `LLM_API_KEY` + `LLM_BASE_URL` + `LLM_MODEL`; that endpoint must support `/responses`. |
+| `AG_STUDIO_AI_BASE_URL` | Defaults to `https://api.openai.com/v1` |
+| `AG_STUDIO_AI_MODELS` | Allowed models, comma-separated; the first is the default (`gpt-5.4-mini`) |
+| `AG_STUDIO_AI_MAX_TOKENS` | Output token cap per turn (default 16000) |
+| `DEMO_SEED` | `0` = no demo data, `1` = force demo data |
+
+Run it:
+```bash
+npm install
+npm run build        # builds the AG Studio dashboard into public/studio (installs studio/ deps)
+npm start            # http://localhost:3000/dashboard  (classic: /dashboard/classic)
+npm run dev:studio   # optional: Vite dev server for studio/ on :5173, proxying /api to :3000
+```
+On Render: Docker deploys build the dashboard in the Dockerfile's first stage. For a native Node service use build command `npm ci && npm run build` and start command `npm start`. Without a build, `/dashboard` falls back to the classic dashboard.
 
 ## API (for the curious)
 - `POST /api/chat` `{sessionId, message}` → `{reply, attachments[], quickReplies[], cart, toolCalls[]}`
 - `GET /api/dashboard` → stats, orders, refunds, invoices, actions
+- `GET /api/studio/data` → flat related tables for AG Studio (orders, orderItems, products, refunds, invoices, agentActions) + licence/AI model settings
+- `POST /api/studio/ai/responses` → AG Studio AI proxy (OpenAI Responses API, streamed)
 - `POST /api/merchant/refunds/:id/approve|reject`
 - `GET /api/health`, `GET /api/catalog`
 
