@@ -24,6 +24,22 @@ export function loadConfig(env = process.env) {
       apiKey: env.LLM_API_KEY || '',
       model: env.LLM_MODEL || '',
     },
+    // Demo data for the merchant dashboard: on by default in mock mode, DEMO_SEED=0 turns it off,
+    // DEMO_SEED=1 forces it on (demo records are flagged `demo: true` and never touch PayPal).
+    demoSeed: env.DEMO_SEED === '1' || (env.DEMO_SEED !== '0' && !paypalReal),
+    studio: {
+      licenseKey: env.AG_STUDIO || '',
+      // AG Studio's AI assistant speaks the OpenAI Responses API. Its own key wins; otherwise the
+      // shop agent's OpenAI-compatible LLM settings are reused.
+      ai: {
+        apiKey: env.AG_STUDIO_OPENAI_API_KEY || env.LLM_API_KEY || '',
+        baseUrl: (env.AG_STUDIO_AI_BASE_URL || (env.AG_STUDIO_OPENAI_API_KEY ? 'https://api.openai.com/v1' : env.LLM_BASE_URL || 'https://api.openai.com/v1')).replace(/\/$/, ''),
+        models: (env.AG_STUDIO_AI_MODELS || (env.AG_STUDIO_OPENAI_API_KEY ? 'gpt-5.4-mini' : env.LLM_MODEL || ''))
+          .split(',').map((m) => m.trim()).filter(Boolean),
+        maxOutputTokens: num(env.AG_STUDIO_AI_MAX_TOKENS, 16000),
+        disabled: env.AG_STUDIO_AI === 'off',
+      },
+    },
     policy: {
       // Refunds up to this amount are executed by the agent; above it they wait for the merchant.
       autoRefundLimit: num(env.AUTO_REFUND_LIMIT, 50),

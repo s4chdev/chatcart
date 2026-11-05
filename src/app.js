@@ -8,16 +8,18 @@ import { handleMessage } from './agent/index.js';
 import { runTool, executeRefund } from './tools.js';
 import { CATALOG } from './catalog.js';
 import { fmt, toCents, fromCents } from './money.js';
+import { buildStudioTables } from './studio-data.js';
+import { studioAiEnabled, studioAiHandler } from './studio-ai.js';
+import fs from 'node:fs';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
+const STUDIO_INDEX = path.join(PUBLIC, 'studio', 'index.html');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 export function createApp({ config = loadConfig(), store = createStore(), paypal } = {}) {
   paypal = paypal || createPayPal(config);
   const app = express();
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '50kb' }));
-  app.use(express.urlencoded({ extended: false }));
   const ctxFor = (sessionId) => ({ config, store, paypal, sessionId });
 
   // Optional basic auth for merchant pages (set DASHBOARD_PASSWORD in production).
@@ -29,6 +31,13 @@ export function createApp({ config = loadConfig(), store = createStore(), paypal
     if (given === pw) return next();
     res.set('WWW-Authenticate', 'Basic realm="ChatCart merchant"').status(401).send('Auth required');
   };
+
+  // AG Studio AI proxy. Mounted before the 50kb JSON parser: Studio sends the conversation plus
+  // its tool schemas on every turn, which is far bigger than a chat message.
+  app.post('/api/studio/ai/responses', merchantAuth, express.json({ limit: '4mb' }), studioAiHandler(config));
+
+  app.use(express.json({ limit: '50kb' }));
+  app.use(express.urlencoded({ extended: false }));
 
   app.get('/api/health', (_req, res) => res.json({ ok: true, paypalMode: paypal.mode, llmMode: config.llm.mode, shop: config.shopName }));
   app.get('/api/catalog', (_req, res) => res.json({ currency: config.currency, products: CATALOG }));
@@ -114,10 +123,19 @@ ${inv.items.map((i) => `<li>${i.qty} × ${esc(i.name)} @ ${esc(fmt(i.unitPrice, 
       if (req.params.decision === 'reject') {
         refund.status = 'REJECTED';
         store.saveRefund(refund);
+      } else if (refund.demo) {
+        // Seeded demo refunds have no real capture behind them: settle locally, never call PayPal.
+        const order = store.getOrder(refund.orderId);
+        refund.status = 'COMPLETED';
+        refund.paypalRefundId = `DEMORFD-${refund.id}`;
+        order.refundedAmount = fromCents(toCents(order.refundedAmount || 0) + toCents(refund.amount));
+        order.status = toCents(order.refundedAmount) >= toCents(order.total) ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+        store.saveRefund(refund);
+        store.saveOrder(order);
       } else {
         await executeRefund(ctx, refund);
       }
-      store.logAction({ sessionId: 'merchant', tool: `merchant_${req.params.decision}_refund`, args: { refund_id: refund.id, amount: refund.amount }, ok: true, summary: `Merchant ${req.params.decision}d refund ${refund.id} (${fmt(refund.amount, refund.currency)}) → ${refund.status}` });
+      store.logAction({ sessionId: 'merchant', ...(refund.demo && { demo: true }), tool: `merchant_${req.params.decision}_refund`, args: { refund_id: refund.id, amount: refund.amount }, ok: true, summary: `Merchant ${req.params.decision}d refund ${refund.id} (${fmt(refund.amount, refund.currency)}) → ${refund.status}` });
       res.json(refund);
     } catch (err) {
       store.logAction({ sessionId: 'merchant', tool: 'merchant_approve_refund', args: { refund_id: refund.id }, ok: false, summary: err.message });
@@ -125,7 +143,18 @@ ${inv.items.map((i) => `<li>${i.qty} × ${esc(i.name)} @ ${esc(fmt(i.unitPrice, 
     }
   });
 
-  app.get('/dashboard', merchantAuth, (_req, res) => res.sendFile(path.join(PUBLIC, 'dashboard.html')));
-  app.use(express.static(PUBLIC));
+  // Flat related tables + settings for the AG Studio dashboard (studio/ -> public/studio/).
+  app.get('/api/studio/data', merchantAuth, (_req, res) => {
+    res.set('Cache-Control', 'no-store').json({
+      ...buildStudioTables({ store, config, paypalMode: paypal.mode }),
+      studio: { licenseKey: config.studio.licenseKey || undefined, aiModels: studioAiEnabled(config) ? config.studio.ai.models : [] },
+    });
+  });
+
+  // /dashboard is the AG Studio build when it exists; the original dashboard stays at /dashboard/classic.
+  const classic = (_req, res) => res.sendFile(path.join(PUBLIC, 'dashboard.html'));
+  app.get('/dashboard/classic', merchantAuth, classic);
+  app.get('/dashboard', merchantAuth, (req, res) => (fs.existsSync(STUDIO_INDEX) ? res.sendFile(STUDIO_INDEX) : classic(req, res)));
+  app.use(express.static(PUBLIC, { index: ['index.html'] }));
   return app;
 }
