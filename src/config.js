@@ -30,6 +30,8 @@ export function loadConfig(env = process.env) {
       baseUrl: (env.LLM_BASE_URL || 'https://openrouter.ai/api/v1').trim().replace(/\/$/, ''),
       // Meta Model API keys look like LLM|<id>|<secret>; some dashboards turn the pipes into underscores.
       apiKey: metaKey(env.LLM_API_KEY),
+      // Raw value too, in case the key really contains underscores.
+      apiKeyRaw: (env.LLM_API_KEY || '').trim(),
       model: (env.LLM_MODEL || '').trim(),
     },
     // Demo data for the merchant dashboard: on by default in mock mode, DEMO_SEED=0 turns it off,

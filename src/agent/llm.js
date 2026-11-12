@@ -30,12 +30,7 @@ export async function llmAgent(ctx, message, fetchImpl = fetch) {
   const out = { reply: '', attachments: [], toolCalls: [] };
 
   for (let step = 0; step < MAX_STEPS; step++) {
-    const res = await fetchImpl(`${config.llm.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${config.llm.apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: config.llm.model, messages, tools: openAiTools(), tool_choice: 'auto', temperature: 0.3 }),
-    });
-    if (!res.ok) throw new Error(`LLM error ${res.status} (model ${JSON.stringify(config.llm.model)}): ${(await res.text()).slice(0, 300)}`);
+    const res = await callLlm(config, messages, fetchImpl);
     const data = await res.json();
     const msg = data.choices?.[0]?.message;
     if (!msg) throw new Error('LLM returned no message');
@@ -60,4 +55,31 @@ export async function llmAgent(ctx, message, fetchImpl = fetch) {
   if (!out.reply) out.reply = 'Done! Anything else I can help with?';
   if (session.history.length > 60) session.history.splice(0, session.history.length - 40);
   return out;
+}
+
+// Tries the configured model (a comma list is allowed, and a "-contributor" model also tries its
+// base model) with the key as normalised and as given; remembers the first pair that works.
+let working = null;
+async function callLlm(config, messages, fetchImpl) {
+  const models = config.llm.model.split(',').map((m) => m.trim()).filter(Boolean);
+  for (const m of [...models]) if (m.endsWith('-contributor')) models.push(m.replace(/-contributor$/, ''));
+  const keys = [...new Set([config.llm.apiKey, config.llm.apiKeyRaw].filter(Boolean))];
+  const pairs = working ? [working] : models.flatMap((model) => keys.map((key) => ({ model, key })));
+  let last;
+  for (const p of pairs) {
+    const res = await fetchImpl(`${config.llm.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${p.key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: p.model, messages, tools: openAiTools(), tool_choice: 'auto', temperature: 0.3 }),
+    });
+    if (res.ok) {
+      if (!working) console.log(`[agent] LLM ok with model ${p.model} (key variant ${keys.indexOf(p.key)})`);
+      working = p;
+      return res;
+    }
+    last = `LLM error ${res.status} (model ${JSON.stringify(p.model)}, key variant ${keys.indexOf(p.key)}): ${(await res.text()).slice(0, 300)}`;
+    if (working || (res.status !== 404 && res.status !== 401 && res.status !== 403)) break;
+  }
+  working = null;
+  throw new Error(last);
 }
