@@ -107,3 +107,8 @@ body { font-family: var(--cc-font); background: var(--cc-canvas); color: var(--c
 .tool-btn.active, .tool-btn.active:hover:not(:disabled) { background: #fff; color: var(--cc-wa-dark); border-color: #fff; }
 .brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 1500px) { .brand-sub { display: none; } }
+
+/* Embedded beside the chat: drop the brand, keep tabs and tools compact. */
+.shell.embed .brand { display: none; }
+.shell.embed .topbar { padding-top: 8px; padding-bottom: 8px; }
+.shell.embed .topbar::after { display: none; }

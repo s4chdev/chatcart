@@ -32,6 +32,9 @@ async function fetchData(): Promise<StudioPayload> {
   return res.json();
 }
 
+// Shown inside the chat page's side-by-side view.
+const EMBED = new URLSearchParams(window.location.search).has('embed') || window.self !== window.top;
+
 export default function App() {
   const [payload, setPayload] = useState<StudioPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +58,11 @@ function Dashboard({ initial }: { initial: StudioPayload }) {
   const flash = (msg: string) => { setToast(msg); window.setTimeout(() => setToast(null), 3200); };
   const [version, setVersion] = useState(0);
   const reload = useCallback(async () => { setPayload(await fetchData()); setVersion((v) => v + 1); }, []);
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => { if (e.origin === window.location.origin && e.data === 'chatcart:refresh') reload(); };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [reload]);
 
   const context = useMemo<DashboardContext>(() => ({
     currency: initial.currency,
@@ -92,7 +100,7 @@ function Dashboard({ initial }: { initial: StudioPayload }) {
   };
 
   return (
-    <div className="shell">
+    <div className={`shell ${EMBED ? 'embed' : ''}`}>
       <header className="topbar">
         <div className="brand">
           <div className="brand-mark">🛒</div>
@@ -119,8 +127,8 @@ function Dashboard({ initial }: { initial: StudioPayload }) {
         <button className={`tool-btn ${mode === 'edit' ? 'active' : ''}`} onClick={() => { const next = mode === 'edit' ? 'view' : 'edit'; update((s) => withFiltersPanelFor(next, s)); setMode(next); }}>
           {mode === 'edit' ? 'Done editing' : '✎ Edit'}
         </button>
-        <a className="toplink" href="/dashboard/classic">Classic</a>
-        <a className="toplink" href="/">Chat</a>
+        {!EMBED && <a className="toplink" href="/dashboard/classic">Classic</a>}
+        {!EMBED && <a className="toplink" href="/">Chat</a>}
       </header>
       <div className="studio-wrap">
         {hasData(payload) ? (

@@ -77,7 +77,8 @@
     var div = document.createElement("div");
     div.className = "bubble" + (isTyping ? " typing-dots" : "");
     if (isTyping) {
-      div.textContent = "typing…";
+      div.innerHTML = "<i></i><i></i><i></i>";
+      div.setAttribute("aria-label", "typing");
     } else {
       div.innerHTML = html + '<span class="time"></span>';
       div.querySelector(".time").textContent = nowTime();
@@ -382,7 +383,10 @@
       var res = await fetch("/api/health");
       var data = await res.json();
       modeBadge.textContent =
-        "paypal: " + (data.paypalMode || "?") + " · llm: " + (data.llmMode || "?");
+        "PayPal " + (data.paypalMode || "?") + " · " +
+        (data.llmMode === "llm"
+          ? String(data.llmModel || "LLM").replace(/-contributor$/, "").replace(/^muse-spark-/, "Muse Spark ")
+          : "rules agent");
     } catch (e) {
       modeBadge.textContent = "offline";
     }
@@ -416,6 +420,7 @@
       var data = await res.json();
       typingRow.remove();
       addAgentMessage(data.reply || "", data.attachments || []);
+      if ((data.toolCalls || []).some(function (t) { return t !== "search_catalog" && t !== "view_cart"; })) refreshDashboard();
       if (Array.isArray(data.quickReplies)) renderChips(data.quickReplies);
     } catch (e) {
       typingRow.remove();
@@ -424,6 +429,58 @@
       sending = false;
     }
   }
+
+  // --- side-by-side merchant dashboard ---
+
+  var layout = document.getElementById("layout");
+  var dashFrame = document.getElementById("dashFrame");
+  var syncNote = document.getElementById("syncNote");
+  var wide = window.matchMedia("(min-width: 1001px)");
+
+  function ensureDashboard() {
+    if (layout.classList.contains("split") && wide.matches && dashFrame.getAttribute("src") === "about:blank") {
+      dashFrame.setAttribute("src", "/dashboard?embed=1");
+    }
+  }
+
+  function setView(view) {
+    layout.className = "layout " + view;
+    document.querySelectorAll(".view-toggle button").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-view") === view);
+    });
+    try { localStorage.setItem("chatcart_view", view); } catch (e) { /* ignore */ }
+    ensureDashboard();
+  }
+
+  var syncTimer = null;
+  function refreshDashboard() {
+    if (dashFrame.getAttribute("src") === "about:blank") return;
+    setTimeout(function () {
+      try { dashFrame.contentWindow.postMessage("chatcart:refresh", window.location.origin); }
+      catch (e) { dashFrame.contentWindow.location.reload(); }
+      syncNote.textContent = "✓ Dashboard updated · " + nowTime();
+      syncNote.classList.add("show");
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(function () { syncNote.classList.remove("show"); }, 4000);
+    }, 400);
+  }
+
+  document.querySelectorAll(".view-toggle button").forEach(function (b) {
+    b.addEventListener("click", function () { setView(b.getAttribute("data-view")); });
+  });
+  wide.addEventListener("change", ensureDashboard);
+  var savedView = null;
+  try { savedView = localStorage.getItem("chatcart_view"); } catch (e) { /* ignore */ }
+  setView(savedView === "chat" ? "chat" : "split");
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    try { localStorage.removeItem("chatcart_session"); } catch (e) { /* ignore */ }
+    sessionId = getSessionId();
+    chatLog.innerHTML = "";
+    addAgentMessage(GREETING, []);
+    renderChips(INITIAL_CHIPS);
+    chatInput.focus();
+  });
 
   // --- init ---
 
