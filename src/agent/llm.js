@@ -81,5 +81,10 @@ async function callLlm(config, messages, fetchImpl) {
     if (working || (res.status !== 404 && res.status !== 401 && res.status !== 403)) break;
   }
   working = null;
+  try {
+    const r = await fetchImpl(`${config.llm.baseUrl}/models`, { headers: { Authorization: `Bearer ${keys[0]}` } });
+    const j = await r.json().catch(() => ({}));
+    last += ` | /models ${r.status}: ${(j.data || []).map((m) => m.id).join(',') || JSON.stringify(j).slice(0, 200)}`;
+  } catch { /* ignore */ }
   throw new Error(last);
 }
