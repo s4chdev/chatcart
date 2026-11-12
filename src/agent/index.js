@@ -1,3 +1,4 @@
+export const llmStatus = { lastOk: null, lastError: null, at: null };
 import { rulesAgent } from './rules.js';
 import { llmAgent } from './llm.js';
 import { suggestReplies } from './suggest.js';
@@ -9,8 +10,11 @@ export async function handleMessage(ctx, message) {
   if (ctx.config.llm.mode === 'llm') {
     try {
       result = await llmAgent(ctx, message);
+      llmStatus.lastOk = new Date().toISOString();
     } catch (err) {
       console.warn('[agent] LLM failed, falling back to rules:', err.message);
+      llmStatus.lastError = err.message.slice(0, 400);
+      llmStatus.at = new Date().toISOString();
       result = await rulesAgent(ctx, message);
       result.fallback = true;
     }

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
 import { createStore } from './store.js';
 import { createPayPal } from './paypal/index.js';
-import { handleMessage } from './agent/index.js';
+import { handleMessage, llmStatus } from './agent/index.js';
 import { runTool, executeRefund } from './tools.js';
 import { CATALOG } from './catalog.js';
 import { fmt, toCents, fromCents } from './money.js';
@@ -39,7 +39,7 @@ export function createApp({ config = loadConfig(), store = createStore(), paypal
   app.use(express.json({ limit: '50kb' }));
   app.use(express.urlencoded({ extended: false }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, paypalMode: paypal.mode, llmMode: config.llm.mode, shop: config.shopName }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, paypalMode: paypal.mode, llmMode: config.llm.mode, llmModel: config.llm.model, llm: llmStatus, keyShape: config.llm.apiKey ? `${config.llm.apiKey.length}:${config.llm.apiKey.slice(0, 4)}:${(config.llm.apiKey.match(/[^A-Za-z0-9]/g) || []).join('')}` : null, shop: config.shopName }));
   app.get('/api/catalog', (_req, res) => res.json({ currency: config.currency, products: CATALOG }));
 
   app.post('/api/chat', async (req, res) => {
