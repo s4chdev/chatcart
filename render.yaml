@@ -1,0 +1,17 @@
+# Render blueprint: one free web service running ChatCart in mock mode with the demo shop seeded.
+# Add PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET (sandbox) and LLM_* in the dashboard to go real.
+services:
+  - type: web
+    name: chatcart
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DEMO_SEED
+        value: "1"
+      - key: CURRENCY
+        value: USD

@@ -8,7 +8,7 @@ export function loadConfig(env = process.env) {
   const port = num(env.PORT, 3000);
   return {
     port,
-    baseUrl: (env.BASE_URL || `http://localhost:${port}`).replace(/\/$/, ''),
+    baseUrl: (env.BASE_URL || env.RENDER_EXTERNAL_URL || `http://localhost:${port}`).replace(/\/$/, ''),
     shopName: env.SHOP_NAME || 'Marwar Crafts, Jodhpur',
     currency: env.CURRENCY || 'USD',
     paypal: {

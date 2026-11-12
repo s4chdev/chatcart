@@ -88,8 +88,11 @@ Requires Node 22+.
 ```bash
 npm install
 cp .env.example .env      # optional; without keys everything runs in MOCK mode
+npm run build             # builds the AG Studio dashboard into public/studio
 npm start                 # http://localhost:3000  and  http://localhost:3000/dashboard
 ```
+
+Skip `npm run build` and `/dashboard` falls back to the classic dashboard (`/dashboard/classic`).
 
 Mode is shown in the chat header badge (`paypal: mock|sandbox · llm: mock|llm`).
 
@@ -97,6 +100,9 @@ Mode is shown in the chat header badge (`paypal: mock|sandbox · llm: mock|llm`)
 1. **PayPal sandbox**: at https://developer.paypal.com → *Apps & Credentials* (Sandbox) → *Create App* (merchant). Put `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` in `.env`. Use the auto-created **sandbox personal account** (Testing Tools → Sandbox Accounts) to pay. Invoicing is enabled on sandbox business accounts by default.
 2. **LLM**: set `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` (examples in `.env.example`). Pick a model with tool-calling support.
 3. If deployed, set `BASE_URL` to the public URL so PayPal can redirect back.
+
+### Deploy on Render
+`render.yaml` is a blueprint: New → Blueprint → pick this repo. It builds with `npm ci && npm run build`, starts with `npm start`, seeds the demo shop and runs in mock mode until you add PayPal sandbox and LLM keys. `BASE_URL` falls back to Render's own URL.
 
 ### Docker
 ```bash
