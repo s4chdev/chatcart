@@ -5,7 +5,7 @@ import 'dotenv/config';
 const metaKey = (k) => {
   const v = (k || '').trim();
   const m = v.match(/LLM[|_](\d{6,})[|_]([A-Za-z0-9-]{16,})/);
-  return m ? `LLM|${m[1]}|${m[2]}` : v;
+  return m ? m[0] : v;
 };
 const num = (v, d) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? d : Number(v));
 
