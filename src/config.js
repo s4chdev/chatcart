@@ -1,5 +1,6 @@
 import 'dotenv/config';
 
+const metaKey = (k) => (k || '').trim().replace(/^LLM_(\d+)_/, 'LLM|$1|');
 const num = (v, d) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? d : Number(v));
 
 export function loadConfig(env = process.env) {
@@ -22,7 +23,7 @@ export function loadConfig(env = process.env) {
       mode: llmReal ? 'llm' : 'mock',
       baseUrl: (env.LLM_BASE_URL || 'https://openrouter.ai/api/v1').trim().replace(/\/$/, ''),
       // Meta Model API keys look like LLM|<id>|<secret>; some dashboards turn the pipes into underscores.
-      apiKey: (env.LLM_API_KEY || '').trim().replace(/^LLM_(\d+)_/, 'LLM|$1|'),
+      apiKey: metaKey(env.LLM_API_KEY),
       model: (env.LLM_MODEL || '').trim(),
     },
     // Demo data for the merchant dashboard: on by default in mock mode, DEMO_SEED=0 turns it off,
@@ -33,7 +34,7 @@ export function loadConfig(env = process.env) {
       // AG Studio's AI assistant speaks the OpenAI Responses API. Its own key wins; otherwise the
       // shop agent's OpenAI-compatible LLM settings are reused.
       ai: {
-        apiKey: env.AG_STUDIO_OPENAI_API_KEY || env.LLM_API_KEY || '',
+        apiKey: metaKey(env.AG_STUDIO_OPENAI_API_KEY || env.LLM_API_KEY),
         baseUrl: (env.AG_STUDIO_AI_BASE_URL || (env.AG_STUDIO_OPENAI_API_KEY ? 'https://api.openai.com/v1' : env.LLM_BASE_URL || 'https://api.openai.com/v1')).replace(/\/$/, ''),
         models: (env.AG_STUDIO_AI_MODELS || (env.AG_STUDIO_OPENAI_API_KEY ? 'gpt-5.4-mini' : env.LLM_MODEL || ''))
           .split(',').map((m) => m.trim()).filter(Boolean),
