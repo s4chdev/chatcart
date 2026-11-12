@@ -1,6 +1,12 @@
 import 'dotenv/config';
 
-const metaKey = (k) => (k || '').trim().replace(/^LLM_(\d+)_/, 'LLM|$1|');
+// Meta Model API keys look like LLM|<id>|<secret>. Some dashboards mangle the pipes or paste extra
+// text around the key, so pull the key back out when it is recognisable; other keys pass through.
+const metaKey = (k) => {
+  const v = (k || '').trim();
+  const m = v.match(/LLM[|_](\d{6,})[|_]([A-Za-z0-9-]{16,})/);
+  return m ? `LLM|${m[1]}|${m[2]}` : v;
+};
 const num = (v, d) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? d : Number(v));
 
 export function loadConfig(env = process.env) {
