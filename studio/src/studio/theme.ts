@@ -1,5 +1,5 @@
 // AG Studio theme for ChatCart. Every value points at a CSS token in src/styles.css, so the shell,
-// widgets, grids and charts share one palette: WhatsApp greens, sandstone canvas, Marwari accents.
+// widgets, grids and charts share one palette: sandstone canvas, dabu indigo, saffron.
 import { studioTheme } from 'ag-studio';
 
 const token = (name: string) => `var(--cc-${name})`;
@@ -20,8 +20,8 @@ export const chatCartTheme = studioTheme.withParams({
   subtleTextColor: token('muted'),
   backgroundColor: token('surface'),
   borderColor: token('border'),
-  accentColor: token('wa-teal'),
-  iconColor: token('wa-dark'),
+  accentColor: token('accent'),
+  iconColor: token('indigo'),
   rowHoverColor: token('highlight'),
 
   studioWrapperBorder: false,
@@ -36,7 +36,7 @@ export const chatCartTheme = studioTheme.withParams({
   studioCanvasRowHeight: 18,
   studioCanvasFontFamily: token('font'),
 
-  // Cards: white, warm border, 12px radius like a chat bubble.
+  // Cards: warm paper, hairline border, 12px radius.
   studioWidgetBackgroundColor: token('surface'),
   studioWidgetBorder: line('border'),
   studioWidgetBorderRadius: 12,
@@ -44,7 +44,7 @@ export const chatCartTheme = studioTheme.withParams({
   studioWidgetTitleFontFamily: token('font'),
   studioWidgetTitleFontSize: 15,
   studioWidgetTitleFontWeight: 700,
-  studioWidgetTitleTextColor: token('wa-dark'),
+  studioWidgetTitleTextColor: token('indigo'),
   studioWidgetSubtitleFontFamily: token('font'),
   studioWidgetSubtitleFontSize: 12,
   studioWidgetSubtitleTextColor: token('muted'),
@@ -57,21 +57,21 @@ export const chatCartTheme = studioTheme.withParams({
   studioPanelContainerBorder: line('border'),
   studioPanelContainerBorderRadius: 0,
   studioPanelDividerColor: token('border'),
-  studioPanelDividerActiveColor: token('wa-teal'),
+  studioPanelDividerActiveColor: token('accent'),
   studioPanelSectionBorderColor: token('border'),
   studioPanelHeaderFontFamily: token('font'),
   studioPanelHeaderFontWeight: 700,
   studioPanelChevronButtonHoverBackgroundColor: token('highlight'),
-  studioPanelChevronButtonHoverColor: token('wa-teal'),
+  studioPanelChevronButtonHoverColor: token('accent'),
   studioToggleButtonActiveBackgroundColor: token('highlight'),
-  studioToggleButtonActiveBorderColor: token('wa-teal'),
-  studioToggleButtonActiveColor: token('wa-dark'),
+  studioToggleButtonActiveBorderColor: token('accent'),
+  studioToggleButtonActiveColor: token('indigo'),
 
   gridFontFamily: token('font'),
   gridFontSize: 13,
   gridCellTextColor: token('ink'),
-  gridHeaderBackgroundColor: '#f3faf6',
-  gridHeaderTextColor: token('wa-dark'),
+  gridHeaderBackgroundColor: '#f6f1e8',
+  gridHeaderTextColor: token('indigo'),
   gridHeaderFontWeight: 700,
   gridHeaderFontSize: 12,
   gridRowHeight: 36,

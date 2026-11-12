@@ -8,8 +8,6 @@
   var chipRow = document.getElementById("chipRow");
   var chatForm = document.getElementById("chatForm");
   var chatInput = document.getElementById("chatInput");
-  var modeBadge = document.getElementById("modeBadge");
-
   var GREETING =
     "Namaste! 🙏 I'm the ChatCart agent for Marwar Crafts, Jodhpur. " +
     "I can show products, build your cart, take payment via PayPal, track orders, and handle refunds. " +
@@ -378,20 +376,6 @@
 
   // --- network ---
 
-  async function loadHealth() {
-    try {
-      var res = await fetch("/api/health");
-      var data = await res.json();
-      modeBadge.textContent =
-        "PayPal " + (data.paypalMode || "?") + " · " +
-        (data.llmMode === "llm"
-          ? String(data.llmModel || "LLM").replace(/-contributor$/, "").replace(/^muse-spark-/, "Muse Spark ")
-          : "rules agent");
-    } catch (e) {
-      modeBadge.textContent = "offline";
-    }
-  }
-
   var sending = false;
 
   async function sendMessage(text) {
@@ -492,8 +476,6 @@
   // Local greeting (no POST on load).
   addAgentMessage(GREETING, []);
   renderChips(INITIAL_CHIPS);
-  loadHealth();
-
   // Auto-capture after PayPal redirect: ?paid=<orderId>
   try {
     var params = new URLSearchParams(window.location.search);
