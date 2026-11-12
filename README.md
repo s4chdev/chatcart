@@ -4,7 +4,7 @@
 
 Demo store: *Marwar Crafts*, a handicrafts & textiles shop in Jodhpur, Rajasthan (Dabu block-print bedsheets, Salawas dhurries, mojaris, kathputli puppets).
 
-**Live demo:** https://chatcart-xyae.onrender.com · merchant dashboard: https://chatcart-xyae.onrender.com/dashboard (mock PayPal, demo shop seeded; free instance, first load may take ~30s to wake)
+**Live demo:** https://chatcart-sg.onrender.com · merchant dashboard: https://chatcart-sg.onrender.com/dashboard (mock PayPal, demo shop seeded; free instance, first load may take ~30s to wake)
 
 Built for the **PayPal AI Hackathon** (Devpost, 2026). MIT licensed.
 
