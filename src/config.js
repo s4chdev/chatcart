@@ -21,7 +21,8 @@ export function loadConfig(env = process.env) {
     llm: {
       mode: llmReal ? 'llm' : 'mock',
       baseUrl: (env.LLM_BASE_URL || 'https://openrouter.ai/api/v1').trim().replace(/\/$/, ''),
-      apiKey: (env.LLM_API_KEY || '').trim(),
+      // Meta Model API keys look like LLM|<id>|<secret>; some dashboards turn the pipes into underscores.
+      apiKey: (env.LLM_API_KEY || '').trim().replace(/^LLM_(\d+)_/, 'LLM|$1|'),
       model: (env.LLM_MODEL || '').trim(),
     },
     // Demo data for the merchant dashboard: on by default in mock mode, DEMO_SEED=0 turns it off,
