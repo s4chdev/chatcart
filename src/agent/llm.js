@@ -35,7 +35,7 @@ export async function llmAgent(ctx, message, fetchImpl = fetch) {
       headers: { Authorization: `Bearer ${config.llm.apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: config.llm.model, messages, tools: openAiTools(), tool_choice: 'auto', temperature: 0.3 }),
     });
-    if (!res.ok) throw new Error(`LLM error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    if (!res.ok) throw new Error(`LLM error ${res.status} (model ${JSON.stringify(config.llm.model)}): ${(await res.text()).slice(0, 300)}`);
     const data = await res.json();
     const msg = data.choices?.[0]?.message;
     if (!msg) throw new Error('LLM returned no message');

@@ -20,9 +20,9 @@ export function loadConfig(env = process.env) {
     },
     llm: {
       mode: llmReal ? 'llm' : 'mock',
-      baseUrl: (env.LLM_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
-      apiKey: env.LLM_API_KEY || '',
-      model: env.LLM_MODEL || '',
+      baseUrl: (env.LLM_BASE_URL || 'https://openrouter.ai/api/v1').trim().replace(/\/$/, ''),
+      apiKey: (env.LLM_API_KEY || '').trim(),
+      model: (env.LLM_MODEL || '').trim(),
     },
     // Demo data for the merchant dashboard: on by default in mock mode, DEMO_SEED=0 turns it off,
     // DEMO_SEED=1 forces it on (demo records are flagged `demo: true` and never touch PayPal).
